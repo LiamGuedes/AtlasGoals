@@ -1,0 +1,6 @@
+framework module Pods_GoalsApp {
+  umbrella header "Pods-GoalsApp-umbrella.h"
+
+  export *
+  module * { export * }
+}
