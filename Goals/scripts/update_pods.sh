@@ -1,1 +1,0 @@
-pod install --repo-update --verbose
