@@ -1,0 +1,57 @@
+name: Xcode - Test and Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Run Tests with Coverage
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          cd Application
+          xcodegen generate
+
+      - name: Set Default Scheme
+        run: |
+          cd Application
+          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'].include?('GoalsApp') ? 'GoalsApp' : JSON.parse(STDIN.gets)['project']['targets'][0]")
+          echo $default | cat >default
+          echo Using default scheme: $default
+
+      - name: Run Tests with Coverage
+        env:
+          scheme: GoalsApp
+        run: |
+          cd Application
+          if [ $scheme = default ]; then scheme=$(cat default); fi
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
+          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
+          xcodebuild test -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,name=iPhone 14,OS=17.0" -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Install slather
+        run: gem install slather
+
+      - name: Check Coverage
+        run: |
+          cd Application
+          slather coverage --scheme GoalsApp --workspace "$file_to_build" --output-directory ./coverage .
+          COVERAGE=$(grep -o 'Total Coverage: [0-9]*\.[0-9]*' ./coverage/index.html | grep -o '[0-9]*\.[0-9]*')
+          echo "Coverage is $COVERAGE%"
+          COVERAGE_INT=${COVERAGE%.*}
+          if [ "$COVERAGE_INT" -lt 80 ]; then
+            echo "Coverage is below 80%. Failing the build."
+            exit 1
+          fi
