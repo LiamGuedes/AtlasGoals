@@ -9,6 +9,8 @@
     <key>CFBundleShortVersionString</key>
     <string>0.1</string>
     <key>UIApplicationSceneManifest</key>
+	<key>CFBundleExecutable</key>
+    <string>Goals</string>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
         <false/>
