@@ -5,7 +5,7 @@ fi
 
 if command -v swiftlint >/dev/null 2>&1
 then
-    swiftlint --config ../Project/swiftlint.yml
+    swiftlint --config ../Application/swiftlint.yml
 else
     echo "Swiftlint não encontrado no sistema. Fazendo o download da versao mais recente ..."
     brew install swiftlint
