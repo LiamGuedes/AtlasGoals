@@ -12,3 +12,6 @@ else
     echo "Swiftlint instalado com sucesso. Prepara a Aspirina."
     swiftlint
 fi
+
+echo "${SRCROOT}/Logs/swiftlint_output" > "$DERIVED_FILE_DIR/swiftlint_output"
+
