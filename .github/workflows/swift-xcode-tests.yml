@@ -30,6 +30,8 @@ jobs:
       - name: Run Tests with Coverage
         env:
           scheme: GoalsApp
+          PRODUCT_BUNDLE_IDENTIFIER: "atlasomne.Goals"
+          INFOPLIST_FILE: "${SRCROOT}/Application/Goals/Info.plist"
         run: |
           cd Application
           if [ $scheme = default ]; then scheme=$(cat default); fi
