@@ -13,5 +13,4 @@ else
     swiftlint
 fi
 
-echo "${SRCROOT}/Logs/swiftlint_output" > "$DERIVED_FILE_DIR/swiftlint_output"
-
+touch "${SRCROOT}/Logs/swiftlint_output"

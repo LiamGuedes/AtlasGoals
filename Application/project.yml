@@ -18,6 +18,9 @@ targets:
       - script: |
           sh ../Scripts/swiftlint.sh
         name: Swiftlint
+        inputFiles: []
+        outputFiles:
+          - "${SRCROOT}/Logs/swiftlint_output"
     sources:
       - path: Goals/sources
         group: Goals
