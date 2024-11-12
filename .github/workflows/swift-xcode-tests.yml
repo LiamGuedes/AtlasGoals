@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ "main" ]
 
+on:
+  workflow_run:
+    workflows: ["Xcode - Build and Analyze"]
+    types:
+      - completed
+
 jobs:
   test:
     name: Run Tests with Coverage
@@ -22,14 +28,6 @@ jobs:
         run: |
           cd Application
           xcodegen generate
-
-      - name: Set Default Scheme
-        run: |
-          cd Application
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'].include?('GoalsApp') ? 'GoalsApp' : JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
 
       - name: Run Tests with Coverage
         env:
