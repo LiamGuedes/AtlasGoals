@@ -1,10 +1,14 @@
 name: Test and Coverage
 
 on:
-  workflow_run:
-    workflows: ["Build and Analyze"]
-    types:
-      - success
+  push:
+    branches: 
+      - "main" 
+      - "develop"
+  pull_request:
+    branches:
+      - "main" 
+      - "develop"
 
 jobs:
   test:
@@ -31,7 +35,7 @@ jobs:
           if [ $scheme = default ]; then scheme=$(cat default); fi
           if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
           file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild test -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild test -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]} -derivedDataPath '~/Library/Developer/Xcode/DerivedData/Tests'
 
       - name: Install slather
         run: gem install slather
