@@ -1,10 +1,10 @@
-name: Xcode - Test and Coverage
+name: Test and Coverage
 
 on:
   workflow_run:
-    workflows: ["Xcode - Build and Analyze"]
+    workflows: ["Build and Analyze"]
     types:
-      - completed
+      - success
 
 jobs:
   test:
