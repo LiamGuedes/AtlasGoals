@@ -28,7 +28,8 @@ jobs:
           xcodegen generate
       
       - name: Clean Derived Data
-          run: rm -rf ~/Library/Developer/Xcode/DerivedData/Tests
+          run: | 
+            rm -rf ~/Library/Developer/Xcode/DerivedData/Tests
 
       - name: Run Tests with Coverage
         env:
