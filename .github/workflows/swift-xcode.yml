@@ -76,8 +76,19 @@ jobs:
       - name: Check Coverage
         working-directory: ./Application
         run: |
-          COVERAGE_FILE=$(find ~/Library/Developer/Xcode/DerivedData -name 'Coverage.profdata' | head -n 1)
-          xcrun llvm-cov report -instr-profile="$COVERAGE_FILE" -ignore-filename-regex=".*/Pods/.*" -use-color=0 > coverage_report.txt
+          COVERAGE_FILE=$(find ./DerivedData -name 'Coverage.profdata' | head -n 1)
+          APP_BINARY=$(find ./DerivedData/Build/Products -name 'GoalsApp' -type f -executable | head -n 1)
+          
+          if [ -z "$COVERAGE_FILE" ] || [ -z "$APP_BINARY" ]; then
+            echo "Erro: Arquivo de cobertura ou binário não encontrados."
+            exit 1
+          fi
+
+          xcrun llvm-cov report \
+            -instr-profile="$COVERAGE_FILE" \
+            "$APP_BINARY" \
+            -ignore-filename-regex=".*/Pods/.*" \
+            -use-color=0 > coverage_report.txt
           
           COVERAGE_PERCENTAGE=$(grep -Eo "[0-9]+\.[0-9]+%" coverage_report.txt | head -n 1 | tr -d '%')
           MINIMUM_COVERAGE=80.0
@@ -89,10 +100,3 @@ jobs:
           else
             echo "Test coverage ($COVERAGE_PERCENTAGE%) meets the minimum threshold of $MINIMUM_COVERAGE%."
           fi
-
-      - name: Upload Coverage Report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: ./Application/coverage_report.txt
