@@ -68,8 +68,31 @@ jobs:
           cd Application
           xcodegen generate
 
-      - name: Run Tests
+      - name: Run Tests with Coverage
+        working-directory: ./Application
         run: |
-          cd Application
-          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
 
+      - name: Check Coverage
+        working-directory: ./Application
+        run: |
+          COVERAGE_FILE=$(find ~/Library/Developer/Xcode/DerivedData -name 'Coverage.profdata' | head -n 1)
+          xcrun llvm-cov report -instr-profile="$COVERAGE_FILE" -ignore-filename-regex=".*/Pods/.*" -use-color=0 > coverage_report.txt
+          
+          COVERAGE_PERCENTAGE=$(grep -Eo "[0-9]+\.[0-9]+%" coverage_report.txt | head -n 1 | tr -d '%')
+          MINIMUM_COVERAGE=80.0
+          echo "Current coverage is: $COVERAGE_PERCENTAGE%"
+          
+          if (( $(echo "$COVERAGE_PERCENTAGE < $MINIMUM_COVERAGE" | bc -l) )); then
+            echo "Test coverage ($COVERAGE_PERCENTAGE%) is below the minimum threshold of $MINIMUM_COVERAGE%."
+            exit 1
+          else
+            echo "Test coverage ($COVERAGE_PERCENTAGE%) meets the minimum threshold of $MINIMUM_COVERAGE%."
+          fi
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: ./Application/coverage_report.txt
