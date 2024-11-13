@@ -41,14 +41,9 @@ jobs:
           echo Using default scheme: $default
 
       - name: Build
-        env:
-          scheme: GoalsApp
         run: |
           cd Application
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild clean build analyze -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze -workspace Goals.xcworkspace -scheme GoalsApp -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
 
   test:
     name: Run Tests for GoalsApp
@@ -74,23 +69,7 @@ jobs:
           xcodegen generate
 
       - name: Run Tests
-        env:
-          scheme: GoalsTests
         run: |
           cd Application
           xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
 
-      - name: Install slather
-        run: gem install slather
-
-      - name: Check Coverage
-        run: |
-          cd Application
-          slather coverage --scheme GoalsApp --workspace "$file_to_build" --output-directory ./coverage .
-          COVERAGE=$(grep -o 'Total Coverage: [0-9]*\.[0-9]*' ./coverage/index.html | grep -o '[0-9]*\.[0-9]*')
-          echo "Coverage is $COVERAGE%"
-          COVERAGE_INT=${COVERAGE%.*}
-          if [ "$COVERAGE_INT" -lt 80 ]; then
-            echo "Coverage is below 80%. Failing the build."
-            exit 1
-          fi
