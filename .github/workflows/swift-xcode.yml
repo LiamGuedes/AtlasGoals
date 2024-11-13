@@ -78,7 +78,7 @@ jobs:
           scheme: GoalsTests
         run: |
           cd Application
-          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 16,OS=18.1"
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
 
       - name: Install slather
         run: gem install slather
