@@ -71,7 +71,7 @@ jobs:
       - name: Run Tests with Coverage
         working-directory: ./Application
         run: |
-          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath ./DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
 
       - name: Check Coverage
         working-directory: ./Application

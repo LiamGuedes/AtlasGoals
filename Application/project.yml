@@ -1,5 +1,6 @@
 name: Goals
 options:
+  derivedDataPath: "${SRCROOT}/../DerivedData"
   postGenCommand: source ../Scripts/update_pods.sh
   deploymentTarget:
     iOS: "15.0"
