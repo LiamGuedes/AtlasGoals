@@ -109,7 +109,7 @@ jobs:
             
             **Coverage Report:** [Download Here](${coverageUrl})
             
-            **Coverage Percentage:** 85%`; # Aqui você pode ajustar para usar COVERAGE_PERCENTAGE se ele estiver no contexto
+            **Coverage Percentage:** 85%`; # Aqui você pode ajustar para usar COVERAGE_PERCENTAGE se ele estiver no contexto`;
 
             if (context.payload.pull_request) {
               await github.rest.issues.createComment({
