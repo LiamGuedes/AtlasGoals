@@ -71,7 +71,7 @@ jobs:
       - name: Run Tests with Coverage
         working-directory: ./Application
         run: |
-          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath ./DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
 
       - name: Check Coverage
         working-directory: ./Application
@@ -79,22 +79,18 @@ jobs:
           COVERAGE_FILE=$(find ./DerivedData -name 'Coverage.profdata' | head -n 1)
           APP_BINARY=$(find ./DerivedData/Build/Products -name 'GoalsApp' -type f -executable | head -n 1)
           
-          if [ -z "$COVERAGE_FILE" ] || [ -z "$APP_BINARY" ]; then
-            echo "Erro: Arquivo de cobertura ou binário não encontrados."
-            exit 1
-          fi
 
-          xcrun llvm-cov report \
-            -instr-profile="$COVERAGE_FILE" \
-            "$APP_BINARY" \
-            -ignore-filename-regex=".*/Pods/.*" \
-            -use-color=0 > coverage_report.txt
-          
-          COVERAGE_PERCENTAGE=$(grep -Eo "[0-9]+\.[0-9]+%" coverage_report.txt | head -n 1 | tr -d '%')
-          MINIMUM_COVERAGE=80.0
-          echo "Current coverage is: $COVERAGE_PERCENTAGE%"
-          
+
+
+          xcodebuild test -destination <destination> -derivedDataPath <custom_path>
+
+                    
           if (( $(echo "$COVERAGE_PERCENTAGE < $MINIMUM_COVERAGE" | bc -l) )); then
+            echo "Test coverage ($COVERAGE_PERCENTAGE%) is below the minimum threshold of $MINIMUM_COVERAGE%."
+            exit 1
+          else
+            echo "Test coverage ($COVERAGE_PERCENTAGE%) meets the minimum threshold of $MINIMUM_COVERAGE%."
+          fi          if (( $(echo "$COVERAGE_PERCENTAGE < $MINIMUM_COVERAGE" | bc -l) )); then
             echo "Test coverage ($COVERAGE_PERCENTAGE%) is below the minimum threshold of $MINIMUM_COVERAGE%."
             exit 1
           else
