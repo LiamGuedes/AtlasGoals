@@ -95,25 +95,12 @@ jobs:
         with:
           name: lcov-report
           path: coverage.info
-
-      - name: Add Comment to Pull Request
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const coverageUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const message = `
-            ### 🛠 CI Pipeline Complete
-
-            All steps were successfully concluded.
-
-            **Coverage Report:** [Download Here](${coverageUrl})
-
-            **Coverage Percentage:** 85%`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            })
+  notify:
+    name: Notify Build Completion
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Display Coverage Report Link
+        run: |
+          echo "Coverage report uploaded successfully."
+          echo "Download the report from: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
