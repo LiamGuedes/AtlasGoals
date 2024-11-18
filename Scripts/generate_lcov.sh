@@ -3,7 +3,7 @@
 # Exit immediately if any command fails
 set -e
 
-DERIVED_DATA_PATH="DerivedData"
+DERIVED_DATA_PATH="../Application/DerivedData"
 XCRESULT_PATH="$DERIVED_DATA_PATH/Logs/Test/*.xcresult"
 LCOV_OUTPUT="coverage.info"
 TEMP_DIR=$(mktemp -d)
