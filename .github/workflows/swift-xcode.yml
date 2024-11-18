@@ -1,0 +1,107 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - "develop"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  build:
+    name: Build and analyze GoalsApp scheme using xcodebuild command
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Install Swiftlint
+        run: brew install swiftlint
+
+      - name: Move to Application Directory
+        run: cd Application
+
+      - name: Run Xcodegen
+        run: |
+          cd Application
+          xcodegen generate
+
+      - name: Set Default Scheme
+        run: |
+          cd Application
+          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'].include?('GoalsApp') ? 'GoalsApp' : JSON.parse(STDIN.gets)['project']['targets'][0]")
+          echo $default | cat >default
+          echo Using default scheme: $default
+
+      - name: Build
+        run: |
+          cd Application
+          xcodebuild clean build analyze -workspace Goals.xcworkspace -scheme GoalsApp -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
+
+  test:
+    name: Run Tests for GoalsApp
+    runs-on: macos-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Install Swiftlint
+        run: brew install swiftlint
+
+      - name: Install lcov
+        run: brew install lcov
+
+      - name: Move to Application Directory
+        run: cd Application
+
+      - name: Run Xcodegen
+        run: |
+          cd Application
+          xcodegen generate
+
+      - name: Run Tests with Coverage
+        working-directory: ./Application
+        run: |
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Generate LCOV report
+        run: |
+          chmod +x ./Scripts/generate_lcov.sh
+          ./Scripts/generate_lcov.sh
+
+      - name: Check Coverage Threshold
+        run: |
+          COVERAGE_PERCENTAGE=$(lcov --summary coverageinfo | grep "lines\.*:" | awk '{print $2}' | sed 's/%//')
+          if (( $(echo "$COVERAGE_PERCENTAGE < 85" | bc -l) )); then
+            echo "Code coverage is below 85%! Current: $COVERAGE_PERCENTAGE%"
+            exit 1
+          else
+            echo "Code coverage meets the threshold: $COVERAGE_PERCENTAGE%"
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lcov-report
+          path: coverageinfo
+
+  notify:
+    name: Notify Build Completion
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Display Coverage Report Link
+        run: |
+          echo "Coverage report uploaded successfully."
+          echo "Download the report from: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"

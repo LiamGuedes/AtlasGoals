@@ -1,0 +1,78 @@
+name: Goals
+options:
+  derivedDataPath: "${SRCROOT}/../DerivedData"
+  postGenCommand: source ../Scripts/update_pods.sh
+  deploymentTarget:
+    iOS: "15.0"
+
+settings:
+  IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+  MARKETING_VERSION: "0.0.1"
+  CURRENT_PROJECT_VERSION: "14"
+
+targets:  
+  GoalsApp:
+    type: application 
+    platform: iOS
+    deploymentTarget: 15.0
+    preBuildScripts:
+      - script: |
+          sh ../Scripts/swiftlint.sh
+        name: Swiftlint
+        inputFiles: []
+        outputFiles:
+          - "${SRCROOT}/Logs/swiftlint_output"
+    sources:
+      - path: Goals/sources
+        group: Goals
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: "atlasomne.Goals"
+      INFOPLIST_FILE: Goals/Info.plist
+      MARKETING_VERSION: 0.0.1
+    entitlements:
+      path: Goals/Debug.entitlements
+      properties:
+        com.apple.security.application-groups: group.atlasomne
+    scheme:
+      gatherCoverageData: true
+      testTargets:
+        - name: GoalsTests
+          parallelizable: true
+          randomExecutionOrder: true
+
+  GoalsTests:
+    type: bundle.unit-test
+    platform: iOS
+    settings:
+      INFOPLIST_FILE: GoalsTests/GoalsTestsInfo.plist
+    sources:
+      - path: GoalsTests/tests
+        group: GoalsTests
+
+    dependencies:
+      - target: GoalsApp
+      
+    scheme:
+      gatherCoverageData: true
+      testTargets:
+        - name: GoalsTests
+          parallelizable: true
+          randomExecutionOrder: true
+  GoalsUITests:
+    type: bundle.unit-test
+    platform: iOS
+    settings:
+      INFOPLIST_FILE: GoalsUITests/GoalsUITestsInfo.plist
+    sources:
+      - path: GoalsUITests/uitests
+        group: GoalsUITests
+
+    dependencies:
+      - target: GoalsApp
+      
+    scheme:
+      gatherCoverageData: true
+      testTargets:
+        - name: GoalsUITests
+          parallelizable: true
+          randomExecutionOrder: true

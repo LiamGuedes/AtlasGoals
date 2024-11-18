@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  Goals
 //
-//  Created by Willian Guedes on 04/11/24.
+//  Created by Willian Guedes on 10/11/24.
 //
 
 import UIKit
@@ -23,6 +23,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
+        let test = 1
+
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 
