@@ -3,10 +3,12 @@
 # Exit immediately if any command fails
 set -e
 
-DERIVED_DATA_PATH="../Application/DerivedData"
+DERIVED_DATA_PATH="./Application/DerivedData"
 XCRESULT_PATH="$DERIVED_DATA_PATH/Logs/Test/*.xcresult"
 LCOV_OUTPUT="coverage.info"
 TEMP_DIR=$(mktemp -d)
+
+ls
 
 if ! command -v xcrun &> /dev/null; then
   echo "xcrun could not be found. Please ensure Xcode Command Line Tools are installed."
