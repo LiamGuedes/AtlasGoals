@@ -82,7 +82,7 @@ jobs:
 
       - name: Check Coverage Threshold
         run: |
-          COVERAGE_PERCENTAGE=$(lcov --summary coverage.info | grep "lines\.*:" | awk '{print $2}' | sed 's/%//')
+          COVERAGE_PERCENTAGE=$(lcov --summary coverageinfo | grep "lines\.*:" | awk '{print $2}' | sed 's/%//')
           if (( $(echo "$COVERAGE_PERCENTAGE < 85" | bc -l) )); then
             echo "Code coverage is below 85%! Current: $COVERAGE_PERCENTAGE%"
             exit 1
@@ -94,7 +94,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: lcov-report
-          path: coverage.info
+          path: coverageinfo
+
   notify:
     name: Notify Build Completion
     runs-on: ubuntu-latest
