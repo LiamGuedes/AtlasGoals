@@ -78,8 +78,8 @@ jobs:
 
       - name: Generate LCOV report
         run: |
-          chmod +x ./generate-lcov.sh
-          ./generate-lcov.sh
+          chmod +x ../../Scripts/generate_lcov.sh
+          ../../Scripts/generate_lcov.sh
 
       - name: Check Coverage Threshold
         run: |
