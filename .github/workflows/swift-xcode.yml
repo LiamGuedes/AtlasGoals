@@ -96,3 +96,27 @@ jobs:
         with:
           name: lcov-report
           path: coverage.info
+
+      - name: Add Comment to Pull Request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const coverageUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const message = `
+              ### 🛠 CI Pipeline Complete
+
+              All steps were successfully concluded.
+
+              **Coverage Report:** [Download Here](${coverageUrl})
+
+              **Coverage Percentage:** ${COVERAGE_PERCENTAGE}%`;
+
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: message
+              });
+            }
