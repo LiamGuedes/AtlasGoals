@@ -99,6 +99,7 @@ jobs:
       - name: Add Comment to Pull Request
         uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const coverageUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const message = `
@@ -109,3 +110,10 @@ jobs:
             **Coverage Report:** [Download Here](${coverageUrl})
 
             **Coverage Percentage:** 85%`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            })
