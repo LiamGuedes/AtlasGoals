@@ -59,6 +59,9 @@ jobs:
 
       - name: Install Swiftlint
         run: brew install swiftlint
+      
+      - name: Install lcov
+        run: brew install lcov
 
       - name: Move to Application Directory
         run: cd Application
@@ -73,26 +76,23 @@ jobs:
         run: |
           xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
 
-      - name: Check Coverage
-        working-directory: ./Application
+      - name: Generate LCOV report
         run: |
-          COVERAGE_FILE=$(find ./DerivedData -name 'Coverage.profdata' | head -n 1)
-          APP_BINARY=$(find ./DerivedData/Build/Products -name 'GoalsApp' -type f -executable | head -n 1)
-          
+          chmod +x ./generate-lcov.sh
+          ./generate-lcov.sh
 
-
-
-          xcodebuild test -destination <destination> -derivedDataPath <custom_path>
-
-                    
-          if (( $(echo "$COVERAGE_PERCENTAGE < $MINIMUM_COVERAGE" | bc -l) )); then
-            echo "Test coverage ($COVERAGE_PERCENTAGE%) is below the minimum threshold of $MINIMUM_COVERAGE%."
+      - name: Check Coverage Threshold
+        run: |
+          COVERAGE_PERCENTAGE=$(lcov --summary coverage.info | grep "lines\.*:" | awk '{print $2}' | sed 's/%//')
+          if (( $(echo "$COVERAGE_PERCENTAGE < 85" | bc -l) )); then
+            echo "Code coverage is below 85%! Current: $COVERAGE_PERCENTAGE%"
             exit 1
           else
-            echo "Test coverage ($COVERAGE_PERCENTAGE%) meets the minimum threshold of $MINIMUM_COVERAGE%."
-          fi          if (( $(echo "$COVERAGE_PERCENTAGE < $MINIMUM_COVERAGE" | bc -l) )); then
-            echo "Test coverage ($COVERAGE_PERCENTAGE%) is below the minimum threshold of $MINIMUM_COVERAGE%."
-            exit 1
-          else
-            echo "Test coverage ($COVERAGE_PERCENTAGE%) meets the minimum threshold of $MINIMUM_COVERAGE%."
+            echo "Code coverage meets the threshold: $COVERAGE_PERCENTAGE%"
           fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lcov-report
+          path: coverage.info
