@@ -2,44 +2,110 @@ name: Build and Test
 
 on:
   push:
-    branches: 
+    branches:
       - "develop"
   pull_request:
     branches:
-      - "main" 
+      - "main"
 
 jobs:
-  setup:
+  build:
+    name: Build and analyze GoalsApp scheme using xcodebuild command
     runs-on: macos-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: |
-          brew install xcodegen swiftlint lcov
-          xcrun simctl create "iPhone 15" com.apple.CoreSimulator.SimDeviceType.iPhone-15 com.apple.CoreSimulator.SimRuntime.iOS-17-0
-          
-  build:
-    needs: setup
-    runs-on: macos-latest
-    steps:
-      - name: Build
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Install Swiftlint
+        run: brew install swiftlint
+
+      - name: Move to Application Directory
+        run: cd Application
+
+      - name: Run Xcodegen
         run: |
           cd Application
           xcodegen generate
+
+      - name: Set Default Scheme
+        run: |
+          cd Application
+          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'].include?('GoalsApp') ? 'GoalsApp' : JSON.parse(STDIN.gets)['project']['targets'][0]")
+          echo $default | cat >default
+          echo Using default scheme: $default
+
+      - name: Build
+        run: |
+          cd Application
           xcodebuild clean build analyze -workspace Goals.xcworkspace -scheme GoalsApp -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" | xcpretty && exit ${PIPESTATUS[0]}
 
   test:
-    needs: build
+    name: Run Tests for GoalsApp
     runs-on: macos-latest
+    needs: build
+
     steps:
-      - name: Run Tests with Coverage
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Install Swiftlint
+        run: brew install swiftlint
+
+      - name: Install lcov
+        run: brew install lcov
+
+      - name: Move to Application Directory
+        run: cd Application
+
+      - name: Run Xcodegen
         run: |
           cd Application
-          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -enableCodeCoverage YES -derivedDataPath DerivedData | xcpretty && exit ${PIPESTATUS[0]}
-          
-      - name: Generate LCOV Report
+          xcodegen generate
+
+      - name: Run Tests with Coverage
+        working-directory: ./Application
+        run: |
+          xcodebuild test -workspace Goals.xcworkspace -scheme GoalsTests -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0.1" -derivedDataPath DerivedData -enableCodeCoverage YES | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Generate LCOV report
         run: |
           chmod +x ./Scripts/generate_lcov.sh
           ./Scripts/generate_lcov.sh
+
+      - name: Check Coverage Threshold
+        run: |
+          COVERAGE_PERCENTAGE=$(lcov --summary coverage.info | grep "lines\.*:" | awk '{print $2}' | sed 's/%//')
+          if (( $(echo "$COVERAGE_PERCENTAGE < 85" | bc -l) )); then
+            echo "Code coverage is below 85%! Current: $COVERAGE_PERCENTAGE%"
+            exit 1
+          else
+            echo "Code coverage meets the threshold: $COVERAGE_PERCENTAGE%"
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lcov-report
+          path: coverage.info
+
+      - name: Add Comment to Pull Request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const coverageUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const message = `
+            ### 🛠 CI Pipeline Complete
+
+            All steps were successfully concluded.
+
+            **Coverage Report:** [Download Here](${coverageUrl})
+
+            **Coverage Percentage:** 85%`; # Aqui você pode ajustar para usar COVERAGE_PERCENTAGE se ele estiver no contexto`;
