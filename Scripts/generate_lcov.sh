@@ -5,7 +5,7 @@ set -e
 
 DERIVED_DATA_PATH="./Application/DerivedData"
 XCRESULT_PATH="$DERIVED_DATA_PATH/Logs/Test/*.xcresult"
-LCOV_OUTPUT="coverage.info"
+LCOV_OUTPUT="coverageinfo"
 TEMP_DIR=$(mktemp -d)
 
 if ! command -v xcrun &> /dev/null || ! command -v jq &> /dev/null; then
